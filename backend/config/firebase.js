@@ -3,23 +3,19 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Fix __dirname in ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load JSON normally
-const rawFile = fs.readFileSync(path.join(__dirname, "serviceAccountKey.json"), "utf8");
-const serviceAccount = JSON.parse(rawFile);
+const serviceAccountPath = path.join(__dirname, "serviceAccountKey.json");
 
-// Fix ONLY the private_key field
-serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
-
-// Initialize Firebase Admin
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+if (!fs.existsSync(serviceAccountPath)) {
+  throw new Error("❌ Missing serviceAccountKey.json file in backend/config");
 }
 
-export const auth = admin.auth();
+const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 export const db = admin.firestore();

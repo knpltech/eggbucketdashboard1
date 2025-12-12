@@ -1,68 +1,52 @@
 import { db } from "../config/firebase.js";
-import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
-// SIGN UP
-export const registerUser = async (req, res) => {
-  try {
-    const { fullName, phone, username, password, role } = req.body;
+const JWT_SECRET = "egg_secret_key";
 
-    // Check if username already exists
-    const userRef = db.collection("users").doc(username);
-    const userDoc = await userRef.get();
-
-    if (userDoc.exists) {
-      return res.status(400).json({ success: false, error: "Username already exists" });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Save to Firestore
-    await userRef.set({
-      fullName,
-      phone,
-      username,
-      password: hashedPassword,
-      role,
-      createdAt: new Date(),
-    });
-
-    return res.json({ success: true, message: "Account created!" });
-
-  } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
-  }
-};
-
-
-// SIGN IN
 export const loginUser = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, role } = req.body;
+
+    if (!username || !password)
+      return res.status(400).json({ success: false, error: "Missing credentials" });
 
     const userRef = db.collection("users").doc(username);
-    const userDoc = await userRef.get();
+    const userSnap = await userRef.get();
 
-    if (!userDoc.exists) {
+    if (!userSnap.exists)
       return res.status(404).json({ success: false, error: "User not found" });
+
+    const user = userSnap.data();
+
+    // ROLE CHECK
+    if (user.role !== role) {
+      return res.status(401).json({
+        success: false,
+        error: `You must select '${user.role}' role to login`,
+      });
     }
 
-    const user = userDoc.data();
-
-    // Check password
-    const match = await bcrypt.compare(password, user.password);
-
-    if (!match) {
-      return res.status(401).json({ success: false, error: "Incorrect password" });
+    // TEMPORARY — PLAIN PASSWORD CHECK
+    if (password !== user.password) {
+      return res.status(401).json({ success: false, error: "Invalid password" });
     }
+
+    const token = jwt.sign(
+      { username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "8h" }
+    );
+
+    const { password: _, ...userWithoutPassword } = user;
 
     return res.json({
       success: true,
-      message: "Login successful",
-      user,
+      token,
+      user: userWithoutPassword,
     });
 
-  } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
+  } catch (err) {
+    console.error("loginUser error:", err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 };

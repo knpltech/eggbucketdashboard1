@@ -35,12 +35,6 @@ export default function LandingPage() {
           >
             Sign In
           </Link>
-          <Link
-            to="/signup"
-            className="px-8 py-2 rounded-full text-white font-semibold bg-gradient-to-b from-[#E18A32] to-[#C46A1A] hover:opacity-90 transition shadow-md"
-          >
-            Sign Up
-          </Link>
         </div>
       </nav>
 

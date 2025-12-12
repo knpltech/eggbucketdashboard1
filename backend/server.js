@@ -1,20 +1,18 @@
 import express from "express";
 import cors from "cors";
+
 import authRoutes from "./routes/authRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Main route
-app.get("/", (req, res) => {
-  res.send("EggBucket Backend Running 🚀");
-});
+app.get("/", (req, res) => res.send("EggBucket Backend Running 🚀"));
 
-// Auth Routes
+// API Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
 const PORT = 5000;
-app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Backend running at http://localhost:${PORT}`));

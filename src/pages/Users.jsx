@@ -20,20 +20,6 @@ const PERMISSIONS = [
 ];
 
 const DEFAULT_USERS = [
-  {
-    id: 1,
-    fullName: "Alex Morgan",
-    username: "alex.morgan",
-    phone: "+91 98765 43210",
-    roles: ["digitalPayments", "dailySales"],
-  },
-  {
-    id: 2,
-    fullName: "Priya Singh",
-    username: "priya.s",
-    phone: "+91 77665 54433",
-    roles: ["necc"],
-  },
 ];
 
 function PermissionTile({ checked, onToggle, label, desc }) {
