@@ -6,7 +6,10 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Neccrate from "./pages/Neccrate";
 import Dailysales from "./pages/Dailysales";
 import Distributor from "./pages/Distributor";
-import ViewerDashboard from "./pages/ViewerDashboard"; // your page
+import ViewerDashboard from "./pages/ViewerDashboard";
+import CashPayments from "./pages/CashPayments";
+import DigitalPayments from "./pages/DigitalPayments";
+import Outlets from "./pages/Outlets";
 
 function App() {
   return (
@@ -24,6 +27,11 @@ function App() {
         <Route path='/neccrate' element={<Neccrate/>}/>
         <Route path='/dailysales' element={<Dailysales/>}/>
         <Route path='/distribution' element={<Distributor/>}/>
+
+        <Route path="/cash-payments" element={<CashPayments />} />
+        <Route path="/digital-payments" element={<DigitalPayments />} />
+        <Route path="/outlets" element={<Outlets />} />
+
       </Routes>
     </BrowserRouter>
   );
