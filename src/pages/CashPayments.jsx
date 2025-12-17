@@ -1,13 +1,15 @@
 // src/pages/CashPayment.jsx
 import { useState, useMemo, useEffect } from "react";
 
-const OUTLETS = [
+const DEFAULT_OUTLETS = [
   "AECS Layout",
   "Bandepalya",
   "Hosa Road",
   "Singasandra",
   "Kudlu Gate",
 ];
+
+const STORAGE_KEY = "egg_outlets_v1";
 
 const MONTHS = [
   "January",
@@ -235,7 +237,7 @@ function CashCalendar({ rows, selectedDate, onSelectDate }) {
 }
 /* ------------------------------------------------ */
 
-function createInitialCashRows() {
+function createInitialCashRows(outlets = DEFAULT_OUTLETS) {
   const today = new Date();
   const baseAmounts = [
     [1300, 3400, 2100, 1500, 900],
@@ -250,8 +252,8 @@ function createInitialCashRows() {
     date.setDate(today.getDate() - index);
 
     const outletValues = {};
-    OUTLETS.forEach((name, i) => {
-      outletValues[name] = amounts[i];
+    outlets.forEach((name, i) => {
+      outletValues[name] = amounts[i] || 0;
     });
 
     const totalAmount = amounts.reduce((sum, v) => sum + v, 0);
@@ -266,7 +268,18 @@ function createInitialCashRows() {
 }
 
 export default function CashPayment() {
-  const [rows, setRows] = useState(() => createInitialCashRows());
+  const [outlets, setOutlets] = useState(DEFAULT_OUTLETS);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const savedOutlets = JSON.parse(saved);
+      const outletAreas = savedOutlets.map((o) => o.area);
+      setOutlets(outletAreas.length > 0 ? outletAreas : DEFAULT_OUTLETS);
+    }
+  }, []);
+
+  const [rows, setRows] = useState(() => createInitialCashRows(outlets));
 
   const [rangeType, setRangeType] = useState("thisMonth");
   const [customFrom, setCustomFrom] = useState("");
@@ -275,7 +288,7 @@ export default function CashPayment() {
   const [entryDate, setEntryDate] = useState("");
   const [entryValues, setEntryValues] = useState(() => {
     const initial = {};
-    OUTLETS.forEach((o) => (initial[o] = ""));
+    outlets.forEach((o) => (initial[o] = ""));
     return initial;
   });
 
@@ -310,18 +323,18 @@ export default function CashPayment() {
   // Totals by outlet and grand total
   const totals = useMemo(() => {
     const outletTotals = {};
-    OUTLETS.forEach((o) => (outletTotals[o] = 0));
+    outlets.forEach((o) => (outletTotals[o] = 0));
     let grandTotal = 0;
 
     filteredRows.forEach((row) => {
-      OUTLETS.forEach((o) => {
+      outlets.forEach((o) => {
         outletTotals[o] += row.outlets[o] || 0;
       });
       grandTotal += row.totalAmount || 0;
     });
 
     return { outletTotals, grandTotal };
-  }, [filteredRows]);
+  }, [filteredRows, outlets]);
 
   const handleEntryChange = (outlet, value) => {
     setEntryValues((prev) => ({
@@ -338,7 +351,7 @@ export default function CashPayment() {
     }
 
     const outletAmounts = {};
-    OUTLETS.forEach((o) => {
+    outlets.forEach((o) => {
       const num = Number(entryValues[o]) || 0;
       outletAmounts[o] = num;
     });
@@ -360,7 +373,7 @@ export default function CashPayment() {
     setEntryDate("");
     setEntryValues(() => {
       const reset = {};
-      OUTLETS.forEach((o) => (reset[o] = ""));
+      outlets.forEach((o) => (reset[o] = ""));
       return reset;
     });
   };
@@ -462,7 +475,7 @@ export default function CashPayment() {
             <thead className="bg-gray-50">
               <tr className="text-left text-xs font-semibold text-gray-500">
                 <th className="min-w-[130px] px-4 py-3">Date</th>
-                {OUTLETS.map((outlet) => (
+                {outlets.map((outlet) => (
                   <th key={outlet} className="px-4 py-3 whitespace-nowrap">
                     {outlet.toUpperCase()}
                   </th>
@@ -483,7 +496,7 @@ export default function CashPayment() {
                   <td className="whitespace-nowrap px-4 py-3">
                     {formatDisplayDate(row.date)}
                   </td>
-                  {OUTLETS.map((outlet) => (
+                  {outlets.map((outlet) => (
                     <td
                       key={outlet}
                       className="whitespace-nowrap px-4 py-3"
@@ -499,7 +512,7 @@ export default function CashPayment() {
 
               <tr className="border-t border-orange-100 bg-orange-50 text-xs font-semibold text-gray-900 md:text-sm">
                 <td className="px-4 py-3">Total</td>
-                {OUTLETS.map((outlet) => (
+                {outlets.map((outlet) => (
                   <td
                     key={outlet}
                     className="whitespace-nowrap px-4 py-3"
@@ -571,7 +584,7 @@ export default function CashPayment() {
 
           {/* Amounts per outlet */}
           <div className="grid gap-3 md:grid-cols-5">
-            {OUTLETS.map((outlet) => (
+            {outlets.map((outlet) => (
               <div key={outlet} className="space-y-1">
                 <p className="text-xs font-medium text-gray-600">
                   {outlet}

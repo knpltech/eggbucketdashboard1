@@ -1,5 +1,5 @@
 // src/pages/Outlets.jsx
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 const SAMPLE_OUTLETS = [
   {
@@ -144,8 +144,18 @@ function FilterIcon({ className = "" }) {
 }
 /* --------------------------- */
 
+const STORAGE_KEY = "egg_outlets_v1";
+
 export default function Outlets() {
-  const [outlets, setOutlets] = useState(SAMPLE_OUTLETS);
+  const [outlets, setOutlets] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : SAMPLE_OUTLETS;
+  });
+
+  // Persist to localStorage when outlets change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(outlets));
+  }, [outlets]);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
