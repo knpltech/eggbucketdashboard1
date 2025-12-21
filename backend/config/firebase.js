@@ -6,16 +6,26 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const serviceAccountPath = path.join(__dirname, "serviceAccountKey.json");
+// 🔑 Detect service account key path
+const renderSecretPath = "/etc/secrets/serviceAccountKey.json";
+const localPath = path.join(__dirname, "serviceAccountKey.json");
+
+const serviceAccountPath = fs.existsSync(renderSecretPath)
+  ? renderSecretPath
+  : localPath;
 
 if (!fs.existsSync(serviceAccountPath)) {
-  throw new Error("❌ Missing serviceAccountKey.json file in backend/config");
+  throw new Error("❌ Missing serviceAccountKey.json file");
 }
 
-const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+const serviceAccount = JSON.parse(
+  fs.readFileSync(serviceAccountPath, "utf8")
+);
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
 export const db = admin.firestore();
